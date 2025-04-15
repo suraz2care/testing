@@ -1,0 +1,31 @@
+name: Deploy to Vercel
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        id: vercel-deploy
+        run: |
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          URL=$(vercel --token=${{ secrets.VERCEL_TOKEN }} --prod --confirm)
+          echo "DEPLOYMENT_URL=$URL" >> $GITHUB_ENV
+
+      - name: Comment deployment URL on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-url
+          message: |
+            🚀 **Preview Deployment**  
+            Your changes are live here: ${{ env.DEPLOYMENT_URL }}
